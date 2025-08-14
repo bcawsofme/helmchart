@@ -1,0 +1,12 @@
+# ClusterIp service to expose the application internally in cluser.
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-chart-{{ .Release.Name }}
+spec:
+  type: ClusterIp
+  selector:
+    app: myapp-chart-{{ .Release.Name }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}

@@ -1,0 +1,15 @@
+# Number of application replicas.
+replicaCount: 2
+
+image:
+  # Docker image repo
+  repository: ngnix
+  # Docker image tag
+  tag: latest
+
+service:
+  # Port to expose on the service
+  port: 80
+
+# Welcome message to display.
+welcomeMessage: "Hello from Airdrie!"

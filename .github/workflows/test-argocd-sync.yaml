@@ -1,0 +1,52 @@
+name: Helm CI with ArgoCD Sync
+
+on:
+  workflow_dispatch:
+
+jobs:
+  helm-ci:
+    name: 🧪 Helm Lint, Template, and Package
+    runs-on: ubuntu-latest
+    outputs:
+      chart-path: ${{ steps.package.outputs.chart_path }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
+      - name: Helm Lint
+        run: helm lint ./myapp-chart
+
+      - name: Helm Template Render (Dry Run)
+        run: helm template testrelease ./myapp-chart
+
+      - name: Package Helm Chart
+        id: package
+        run: |
+          helm package ./myapp-chart
+          echo "chart_path=$(ls *.tgz)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Helm Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart
+          path: ${{ steps.package.outputs.chart_path }}
+
+  argocd-sync:
+    name: 🚀 Trigger Argo CD Sync
+    runs-on: ubuntu-latest
+    needs: helm-ci
+    env:
+      ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+      ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
+      ARGOCD_APP: myapp  # CHANGE this to your actual ArgoCD app name
+    steps:
+      - name: Trigger Argo CD Sync via API
+        run: |
+          curl -X POST "$ARGOCD_SERVER/api/v1/applications/$ARGOCD_APP/sync" \
+            -H "Authorization: Bearer $ARGOCD_TOKEN" \
+            -H "Content-Type: application/json"

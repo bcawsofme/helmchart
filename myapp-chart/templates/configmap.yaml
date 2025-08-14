@@ -1,0 +1,8 @@
+# ConfigMap that stores the welcome message.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp-chart-config-{{ .Release.Name }}
+data:
+  # The welcome message to be injected into the app as an environment variable.
+  WELCOME_MESSAGE: "{{ .Values.welcomeMessage }}"

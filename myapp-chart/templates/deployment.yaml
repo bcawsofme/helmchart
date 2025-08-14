@@ -1,0 +1,26 @@
+# Deployment of the web application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-chart-{{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }} # Number of application replicas
+  selector:
+    matchLabels:
+      app: myapp-chart-{{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: myapp-chart-{{ .Release.Name }}
+    spec:
+      containers:
+        - name: myapp-container
+          image: "{{ .Value.image.repository }}:{{ .Values.image.tag }}" # Configuration image and tag
+          ports:
+            - containerPort: {{ .Values.service.port }} # Expose the container port
+          env:
+            - name: WELCOME_MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-chart-config-{{ .Release.Name }} # Reference to the config map
+                  key: WELCOME_MESSAGE
