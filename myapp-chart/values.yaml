@@ -13,3 +13,37 @@ service:
 
 # Welcome message to display.
 welcomeMessage: "Hello from Airdrie!"
+
+# Health Probes
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    failureThreshold: 3
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 3
+
+# Horizontal Scaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+# Pod Disruption Budget - Ensures at least one pod remains available during voluntary disruptions (like node drains or rollouts).
+pdb:
+  enabled: true
+  minAvailable: 1
+
+# Resource limits
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"

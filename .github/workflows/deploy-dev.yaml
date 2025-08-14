@@ -1,0 +1,47 @@
+name: Helm Deploy (Dev & Prod)
+
+on:
+  workflow_dispatch:
+
+  # push:
+  #   branches:
+  #     - main       # Production
+  #     - develop    # Development
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+
+    env:
+      ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+      ARGOCD_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+
+      - name: Select values file
+        id: values
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            echo "values_file=values.prod.yaml" >> $GITHUB_OUTPUT
+            echo "argocd_app=myapp-prod" >> $GITHUB_OUTPUT
+          else
+            echo "values_file=values.dev.yaml" >> $GITHUB_OUTPUT
+            echo "argocd_app=myapp-dev" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Helm Lint and Template
+        run: |
+          helm lint ./myapp-chart -f ./myapp-chart/${{ steps.values.outputs.values_file }}
+          helm template test ./myapp-chart -f ./myapp-chart/${{ steps.values.outputs.values_file }}
+
+      - name: Trigger ArgoCD Sync
+        run: |
+          curl -X POST "$ARGOCD_SERVER/api/v1/applications/${{ steps.values.outputs.argocd_app }}/sync" \
+            -H "Authorization: Bearer $ARGOCD_TOKEN" \
+            -H "Content-Type: application/json"

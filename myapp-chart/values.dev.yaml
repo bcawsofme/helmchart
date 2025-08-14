@@ -1,0 +1,9 @@
+replicaCount: 1
+
+image:
+  tag: dev
+
+welcomeMessage: "Welcome to Dev"
+
+service:
+  port: 8080
